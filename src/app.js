@@ -24,6 +24,16 @@ app.use(express.json());
 app.use(helmet());
 app.use(cors());
 
+function validateBearerToken(req, res, next) {
+  const bearerToken = req.get('Authorization');
+  const apiToken = process.env.API_TOKEN;
+  if(!bearerToken || bearerToken.split(' ')[1] !== apiToken) {
+    res.status(401).json({error: 'Not Authorized'});
+  }
+  next();
+}
+
+
 // Creates global variable
 let addresses = [
   {
@@ -63,13 +73,8 @@ app.use(function errorHandler(error, req, res, next) {
    res.status(500).json(response);
  });
 
- // Fetches all addresses
-app.get('/address', (req, res) => {
-  res.status(200).send(addresses);
-});
-
 // Creates new address
-app.post('/address', (req, res) => {
+function postAddress(req, res) {
   const { firstName, lastName, address1, address2='', city, state, zip } = req.body;
 
   // Validates data
@@ -104,12 +109,12 @@ app.post('/address', (req, res) => {
   
   // Sends reponse
   res.status(201).send(newAddress);
-});
+}
 
 // Deletes address
-app.delete('/address/:userId', (req, res) => {
+function deleteAddress(req, res) {
   const {userId} = req.params;
-  
+
   // Find user
   const index = addresses.findIndex(a => a.id === Number(userId));
   console.log('id:', userId, 'index', index);
@@ -120,6 +125,15 @@ app.delete('/address/:userId', (req, res) => {
   // Removes 1 address at the specified index
   addresses.splice(index,1);
   res.status(204).end();
+}
+
+ // Fetches all addresses
+app.get('/address', (req, res) => {
+  res.status(200).send(addresses);
 });
+
+app.post('/address', validateBearerToken, postAddress);
+
+app.delete('/address/:userId', validateBearerToken, deleteAddress);
 
 module.exports = app;

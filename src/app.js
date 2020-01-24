@@ -1,14 +1,19 @@
 // Configure create variables written in .env file to the environment 
 require('dotenv').config();
+// Imports express
 const express = require('express');
 // Enable middleware functions
 const morgan = require('morgan');
-// Enable Cross Origin Resource Sharing
+// Enable Cross Origin Resource Sharing, simplifies the config of CORS in Express
 const cors = require('cors');
+// Hides HTTP response information in the header to tighten security
 const helmet = require('helmet');
+// Imports settings
 const { NODE_ENV } = require('./config');
+// Imports UUID
 const uuid = require('uuid/v4');
 
+// Creates react object
 const app = express();
 
 // Depends on the condition of the environment
@@ -21,6 +26,7 @@ const morganOption = (NODE_ENV === 'production')
 // Mounting our midware
 app.use(morgan(morganOption));
 app.use(express.json());
+// Use helmet to hide response header details before sharing resources
 app.use(helmet());
 app.use(cors());
 
@@ -108,7 +114,9 @@ function postAddress(req, res) {
   addresses.push(newAddress);
   
   // Sends reponse
-  res.status(201).send(newAddress);
+  res.status(201)
+  .location(`http://localhost:8000/address/${id}`)
+  .json(newAddress);
 }
 
 // Deletes address
